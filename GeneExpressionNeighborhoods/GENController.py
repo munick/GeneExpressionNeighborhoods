@@ -141,3 +141,11 @@ print "... RN calculation complete"
 # OUTPUT
 exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
 
+
+## Relative Neighbor
+print "Calculating GG ..."
+ggPointGroup, ggEdges = pg.getGabrielNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+print "... GG calculation complete"
+# OUTPUT
+exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
+
