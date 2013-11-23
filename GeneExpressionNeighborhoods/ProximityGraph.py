@@ -4,7 +4,6 @@ RelativeNighborGraph
 Classes and methods defining graph types and converting similarity or distance matrices to sets of points and edges.
 """
 
-import RelationalMethod
 import numpy as np
 import math
 
@@ -56,7 +55,7 @@ def getRelativeNeighborGraph(relationMatrix, getBestScore, getWorstScore):
     # loop through rows of distance/similarity matrix ************************************************* N
     for p, row in enumerate(relationMatrix):
         # maxIRow = getBestScore(row)
-        print (p+1, row[p+1:])
+        # print (p+1, row[p+1:])
         # loop from column p+1 through to the last column of ith row ********************************** (N^2)/2
         # essentially, we're looping through all weighted edges, let relationPQ = weight of edge p,q
         for q, relationPQ in enumerate(row[p+1:]):
@@ -71,8 +70,8 @@ def getRelativeNeighborGraph(relationMatrix, getBestScore, getWorstScore):
                 # loop through all columns in the ith row
                 # relationPR is weight of edge p,r ***************************************************** (N^3)/2
                 for r, relationPR in enumerate(row):
-                    # skip rows p and q
-                    if p != r != q:
+                    # skip rows p and q and any points for which there is no distance value
+                    if p != r != q and (not np.isnan(relationPR)) and (not np.isnan(relationMatrix[q, r])):
                         # for triangle prq, if pq is the longest distance, then p and q are not neighbors
                         lengths = [relationPR, relationMatrix[q, r]]
                         if lengths[getWorstScore(lengths)] < relationPQ:
@@ -116,7 +115,7 @@ def getGabrielNeighborGraph(relationMatrix, getBestScore, getWorstScore):
     # loop through rows of distance/similarity matrix ************************************************* N
     for p, row in enumerate(relationMatrix):
         # maxIRow = getBestScore(row)
-        print (p+1, row[p+1:])
+        # print (p+1, row[p+1:])
         # loop from column p+1 through to the last column of ith row ********************************** (N^2)/2
         # essentially, we're looping through all weighted edges, let relationPQ = weight of edge p,q
         for q, relationPQ in enumerate(row[p+1:]):
@@ -131,8 +130,8 @@ def getGabrielNeighborGraph(relationMatrix, getBestScore, getWorstScore):
                 # loop through all columns in the ith row
                 # relationPR is weight of edge p,r ***************************************************** (N^3)/2
                 for r, relationPR in enumerate(row):
-                    # skip rows p and q
-                    if p != r != q:
+                    # skip rows p and q and any where there are no distance values
+                    if p != r != q and (not np.isnan(relationPR)) and (not np.isnan(relationMatrix[q, r])):
                         # if angle prq is > pi/2, then it's not an edge
                         # another calculation: if d(p,q) > sqrt of (d(p,r)^2 + d(r,q)^2)) then not an edge
                         lengths = math.sqrt(relationPR**2 + relationMatrix[q, r]**2)

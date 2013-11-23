@@ -54,5 +54,32 @@ class TestGabrielGraph(unittest.TestCase):
                                                 " edges were expected in the GG but not found")
 
 
+class TestRNGGGSubsetness(unittest.TestCase):
+    def setUp(self):
+
+        # import data files and edge files
+        # ggEdges = np.genfromtxt("data/testGGWiki/GGedges.csv", delimiter=",")
+        ggEdges = np.genfromtxt("output/yeast/EuclideanGGEdges.csv", delimiter=",")
+        self.expectedGGEdges = set()
+        for edge in ggEdges:
+            self.expectedGGEdges.add(frozenset(edge))
+
+        # rngEdges = np.genfromtxt("data/testRNGWiki/edges.csv", delimiter=",")
+        rngEdges = np.genfromtxt("output/yeast/EuclideanRNEdges.csv", delimiter=",")
+        self.expectedRNGEdges = set()
+        for edge in rngEdges:
+            self.expectedRNGEdges.add(frozenset(edge))
+
+    def testSubsetness(self):
+        # there shouldnt be any edges inGG that are not in RNG
+        edgesInRNGButNotGG = self.expectedGGEdges.difference(self.expectedRNGEdges)
+        edgesInGGButNotRNG = self.expectedRNGEdges.difference(self.expectedGGEdges)
+        self.assertTrue(len(edgesInGGButNotRNG) == 0,
+                        "There shouldn't be any edges in GG that are not in RNG, but there are " +
+                        str(len(edgesInGGButNotRNG)) + "!")
+        # self.assertTrue(len(edgesInRNGButNotGG) == 0,
+        #                 " " +
+        #                 str(len(edgesInRNGButNotGG)) + "!")
+
 if __name__ == '__main__':
     unittest.main()
