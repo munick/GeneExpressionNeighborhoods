@@ -16,6 +16,7 @@ import ProximityGraph as pg
 import csv
 import os
 import itertools
+import time
 import numpy as np
 from scipy import stats
 from scipy import spatial
@@ -98,6 +99,8 @@ if __name__ == "__main__":
         geneExpressionFileName = baseInputDir + "yeast/yeastEx.txt"
         geneNameFileName = baseInputDir + "yeast/yeastNames.txt"
 
+    start_time = time.time()
+    print start_time, " (start time)"
     # get subdirectory
     subdirectory = os.path.dirname(geneExpressionFileName)
 
@@ -144,6 +147,9 @@ if __name__ == "__main__":
     print "... RN calculation complete"
     # OUTPUT
     exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
+    done_with_rn_time = time.time()
+    print done_with_rn_time, " (end RN time)"
+    print start_time - done_with_rn_time, " seconds (total runtime for RN)"
 
 
     ## Relative Neighbor
@@ -152,4 +158,7 @@ if __name__ == "__main__":
     print "... GG calculation complete"
     # OUTPUT
     exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
-
+    end_time = time.time()
+    print end_time, " (end time)"
+    print done_with_rn_time - end_time, " seconds (total runtime for GG)"
+    print start_time - end_time, " seconds (total runtime)"
