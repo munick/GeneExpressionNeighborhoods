@@ -124,6 +124,9 @@ if __name__ == "__main__":
     print "Calculating relationship with %s method ..." % distanceMethod
     relationMatrix = calculateRelationMatrix(normalizedData, relationMethods[distanceMethod].method)
     print "... %s calculation complete" % distanceMethod
+    done_with_distance_time = time.time()
+    print done_with_distance_time, " (end RN time)"
+    print start_time - done_with_distance_time, " seconds (total runtime for RN)"
 
     # replace infinite values with NaNs
     relationMatrix[np.isinf(relationMatrix)] = np.NaN
@@ -133,11 +136,14 @@ if __name__ == "__main__":
 
 
     ## Nearest Neighbor
-    # print "Calculating NN ..."
-    # nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
-    # print "... NN calculation complete"
+    print "Calculating NN ..."
+    nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
+    print "... NN calculation complete"
     # # OUTPUT
-    # exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
+    exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
+    done_with_nn_time = time.time()
+    print done_with_nn_time, " (end NN time)"
+    print done_with_distance_time - done_with_nn_time, " seconds (runtime for NN)"
 
 
     ## Relative Neighbor
@@ -149,7 +155,7 @@ if __name__ == "__main__":
     exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
     done_with_rn_time = time.time()
     print done_with_rn_time, " (end RN time)"
-    print start_time - done_with_rn_time, " seconds (total runtime for RN)"
+    print done_with_nn_time - done_with_rn_time, " seconds (runtime for RN)"
 
 
     ## Relative Neighbor
@@ -160,5 +166,5 @@ if __name__ == "__main__":
     exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
     end_time = time.time()
     print end_time, " (end time)"
-    print done_with_rn_time - end_time, " seconds (total runtime for GG)"
+    print done_with_rn_time - end_time, " seconds (runtime for GG)"
     print start_time - end_time, " seconds (total runtime)"
