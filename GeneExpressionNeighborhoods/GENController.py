@@ -9,11 +9,13 @@ geneExpressionFileName - path to the input file containing gene expression level
 geneNameFileName - path to the input file containing gene names, note the basepath is assumed to be data
 """
 
+import sys
+sys.path.insert(0,'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
 from RelationalMethod import defaultRelationMethods as relationMethods
 import ProximityGraph as pg
 import csv
-import sys
 import os
+import itertools
 import numpy as np
 from scipy import stats
 from scipy import spatial
@@ -80,72 +82,74 @@ def exportToCSV(subdirectory, graphType, relationMethod, edgeData, geneGroupData
     exportGeneGroupToCSV(outputDirectory, graphType, relationMethod, geneGroupData, geneNames)
 
 
-# Get distance method from command line arguments
-if len(sys.argv) >= 4:
-    distanceMethod = sys.argv[1]
-    geneExpressionFileName = baseInputDir + sys.argv[2]
-    geneNameFileName = baseInputDir + sys.argv[3]
-else:
-    # default to Euclidean distance
-    if len(sys.argv) == 1:
-        distanceMethod = "Euclidean"
-    else:
+if __name__ == "__main__":
+    # Get distance method from command line arguments
+    if len(sys.argv) >= 4:
         distanceMethod = sys.argv[1]
-    # default to yeast gene expression dataset
-    geneExpressionFileName = baseInputDir + "yeast/yeastEx.txt"
-    geneNameFileName = baseInputDir + "yeast/yeastNames.txt"
+        geneExpressionFileName = baseInputDir + sys.argv[2]
+        geneNameFileName = baseInputDir + sys.argv[3]
+    else:
+        # default to Euclidean distance
+        if len(sys.argv) == 1:
+            distanceMethod = "Euclidean"
+        else:
+            distanceMethod = sys.argv[1]
+        # default to yeast gene expression dataset
+        geneExpressionFileName = baseInputDir + "yeast/yeastEx.txt"
+        geneNameFileName = baseInputDir + "yeast/yeastNames.txt"
 
-# get subdirectory
-subdirectory = os.path.dirname(geneExpressionFileName)
+    # get subdirectory
+    subdirectory = os.path.dirname(geneExpressionFileName)
 
-# INPUT
-# Read gene expression data and gene names files
-data  = np.genfromtxt(geneExpressionFileName, dtype=np.float32)
-genes = np.genfromtxt(geneNameFileName, dtype=("|S10"))
+    # INPUT
+    # Read gene expression data and gene names files
+    data  = np.genfromtxt(geneExpressionFileName, dtype=np.float32)
+    genes = np.genfromtxt(geneNameFileName, dtype=("|S10"))
 
-#PREPROCESSING
-print "Pre-Processing data ..."
-# normalize the data using zscore
-normalizedData = stats.zscore(data, 1)
-# normalizedData = data
+    #PREPROCESSING
+    print "Pre-Processing data ..."
+    # normalize the data using zscore
+    normalizedData = stats.zscore(data, 1)
+    # normalizedData = data
 
-# replace nans with infinite values
-whereAreNaNs = np.isnan(normalizedData)
-normalizedData[whereAreNaNs] = np.Inf
-print "... Pre-Processing complete"
+    # replace nans with infinite values
+    whereAreNaNs = np.isnan(normalizedData)
+    normalizedData[whereAreNaNs] = np.Inf
+    print "... Pre-Processing complete"
 
-# np.savetxt("normalized.txt", normalizedData, '%.2f')
-print "Calculating relationship with %s method ..." % distanceMethod
-relationMatrix = calculateRelationMatrix(normalizedData, relationMethods[distanceMethod].method)
-print "... %s calculation complete" % distanceMethod
+    # np.savetxt("normalized.txt", normalizedData, '%.2f')
+    print "Calculating relationship with %s method ..." % distanceMethod
+    relationMatrix = calculateRelationMatrix(normalizedData, relationMethods[distanceMethod].method)
+    print "... %s calculation complete" % distanceMethod
 
-# replace infinite values with NaNs
-relationMatrix[np.isinf(relationMatrix)] = np.NaN
+    # replace infinite values with NaNs
+    relationMatrix[np.isinf(relationMatrix)] = np.NaN
 
-# replace diagonal with Nans
-np.fill_diagonal(relationMatrix, np.NaN)
-
-
-## Nearest Neighbor
-print "Calculating NN ..."
-nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
-print "... NN calculation complete"
-# OUTPUT
-exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
-
-
-## Relative Neighbor
-print "Calculating RN ..."
-rnPointGroup, rnEdges = pg.getRelativeNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
-print "... RN calculation complete"
-# OUTPUT
-exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
+    # replace diagonal with Nans
+    np.fill_diagonal(relationMatrix, np.NaN)
 
 
-## Relative Neighbor
-print "Calculating GG ..."
-ggPointGroup, ggEdges = pg.getGabrielNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
-print "... GG calculation complete"
-# OUTPUT
-exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
+    ## Nearest Neighbor
+    # print "Calculating NN ..."
+    # nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
+    # print "... NN calculation complete"
+    # # OUTPUT
+    # exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
+
+
+    ## Relative Neighbor
+    allEdges = itertools.combinations(range(len(data)), 2)
+    print "Calculating RN ..."
+    rnPointGroup, rnEdges = pg.getRelativeNeighborGraph(allEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+    print "... RN calculation complete"
+    # OUTPUT
+    exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
+
+
+    ## Relative Neighbor
+    print "Calculating GG ..."
+    ggPointGroup, ggEdges = pg.getGabrielNeighborGraph(rnEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+    print "... GG calculation complete"
+    # OUTPUT
+    exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
 

@@ -4,7 +4,8 @@ RelationalMethod
 A wrapper for numpy distance metric methods and similarity measure methods. The wrapper adds bestScore and worstScore
 methods that return the nearest/most similar and the furthest/least similar values (respectively) in an array.
 """
-
+import sys
+sys.path.insert(0,'/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
 from abc import ABCMeta
 from abc import abstractproperty
 import numpy as np
