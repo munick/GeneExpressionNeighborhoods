@@ -125,8 +125,8 @@ if __name__ == "__main__":
     relationMatrix = calculateRelationMatrix(normalizedData, relationMethods[distanceMethod].method)
     print "... %s calculation complete" % distanceMethod
     done_with_distance_time = time.time()
-    print done_with_distance_time, " (end RN time)"
-    print start_time - done_with_distance_time, " seconds (total runtime for RN)"
+    print done_with_distance_time, " (end distance matrix time)"
+    print done_with_distance_time - start_time, " seconds (total runtime for distance matrix)"
 
     # replace infinite values with NaNs
     relationMatrix[np.isinf(relationMatrix)] = np.NaN
@@ -134,17 +134,15 @@ if __name__ == "__main__":
     # replace diagonal with Nans
     np.fill_diagonal(relationMatrix, np.NaN)
 
-
-    ## Nearest Neighbor
+    # Nearest Neighbor
     print "Calculating NN ..."
     nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
     print "... NN calculation complete"
-    # # OUTPUT
+    # OUTPUT
     exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
     done_with_nn_time = time.time()
     print done_with_nn_time, " (end NN time)"
-    print done_with_distance_time - done_with_nn_time, " seconds (runtime for NN)"
-
+    print done_with_nn_time - done_with_distance_time, " seconds (runtime for NN)"
 
     ## Relative Neighbor
     allEdges = itertools.combinations(range(len(data)), 2)
@@ -155,10 +153,22 @@ if __name__ == "__main__":
     exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
     done_with_rn_time = time.time()
     print done_with_rn_time, " (end RN time)"
-    print done_with_nn_time - done_with_rn_time, " seconds (runtime for RN)"
+    print done_with_rn_time - done_with_nn_time, " seconds (runtime for RN)"
 
+    ## Relative Neighbor Multi Processor
+    allEdges = itertools.combinations(range(len(data)), 2)
+    print "Calculating RN_MP ..."
+    rnmpPointGroup, rnmpEdges = pg.getRelativeNeighborGraphMP(allEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+    print "... RN_MP calculation complete"
+    # OUTPUT
+    exportToCSV(subdirectory, "RN_MP", distanceMethod, rnmpEdges, rnmpPointGroup, genes)
+    done_with_rnmp_time = time.time()
+    print done_with_rnmp_time, " (end RN_MP time)"
+    print done_with_rnmp_time - done_with_rn_time, " seconds (runtime for RN_MP)"
+    print "In RN_MP but not RN: ", len(rnmpEdges.difference(rnEdges))
+    print "In RN but not RN_MP: ", len(rnEdges.difference(rnmpEdges))
 
-    ## Relative Neighbor
+    # Relative Neighbor
     print "Calculating GG ..."
     ggPointGroup, ggEdges = pg.getGabrielNeighborGraph(rnEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
     print "... GG calculation complete"
@@ -166,5 +176,5 @@ if __name__ == "__main__":
     exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
     end_time = time.time()
     print end_time, " (end time)"
-    print done_with_rn_time - end_time, " seconds (runtime for GG)"
-    print start_time - end_time, " seconds (total runtime)"
+    print end_time - done_with_rn_time, " seconds (runtime for GG)"
+    print end_time - start_time, " seconds (total runtime)"
