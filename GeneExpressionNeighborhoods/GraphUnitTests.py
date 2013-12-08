@@ -86,41 +86,6 @@ class TestRNGGGSubsetness(unittest.TestCase):
         #                 " " +
         #                 str(len(edgesInRNGButNotGG)) + "!")
 
-class TestDTRNGGGSubsetness(unittest.TestCase):
-    def setUp(self):
-        # import data files and edge files
-        points = np.genfromtxt("data/yeast/yeastEx.txt")
-        # ggEdges = np.genfromtxt("data/testGGWiki/GGedges.csv", delimiter=",")
-        ggEdges = np.genfromtxt("output/yeast_11-23/EuclideanGGEdges.csv", delimiter=",")
-        self.expectedGGEdges = set()
-        for edge in ggEdges:
-            self.expectedGGEdges.add(frozenset(edge))
-
-        # rngEdges = np.genfromtxt("data/testRNGWiki/edges.csv", delimiter=",")
-        rngEdges = np.genfromtxt("output/yeast_11-23/EuclideanRNEdges.csv", delimiter=",")
-        self.expectedRNGEdges = set()
-        for edge in rngEdges:
-            self.expectedRNGEdges.add(frozenset(edge))
-        start_time = time.time()
-        print start_time, "start time"
-        dtEdges = pg.getDelaunayTriangulationEdges(points)
-        run_time = time.time() - start_time
-        print run_time, "seconds"
-        self.expectedDTEdges = dtEdges
-
-    def testSubsetness(self):
-        # there shouldnt be any edges inGG that are not in RNG
-        self.assertTrue(self.expectedDTEdges >= self.expectedRNGEdges >= self.expectedGGEdges, "DT !>= RNG !>= GG")
-        edgesInRNGButNotGG = self.expectedGGEdges.difference(self.expectedRNGEdges)
-        edgesInGGButNotRNG = self.expectedRNGEdges.difference(self.expectedGGEdges)
-        self.assertTrue(len(edgesInGGButNotRNG) == 0,
-                        "There shouldn't be any edges in GG that are not in RNG, but there are " +
-                        str(len(edgesInGGButNotRNG)) + "!")
-        # self.assertTrue(len(edgesInRNGButNotGG) == 0,
-        #                 " " +
-        #                 str(len(edgesInRNGButNotGG)) + "!")
-
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -84,6 +84,11 @@ def exportToCSV(subdirectory, graphType, relationMethod, edgeData, geneGroupData
 
 
 if __name__ == "__main__":
+    # As of now this only runs on posix systems (mainly, osx and *nix operating systems)
+    if os.name != "posix":
+        print "GeneExpressionNeighborhoods can only be run on posix systems. Try osx or linux."
+        sys.exit()
+
     # Get distance method from command line arguments
     if len(sys.argv) >= 4:
         distanceMethod = sys.argv[1]
@@ -136,44 +141,31 @@ if __name__ == "__main__":
 
     # Nearest Neighbor
     print "Calculating NN ..."
-    nnPointGroup, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
+    nnPointGroupMapping, nnEdges = pg.getNearestNeighborGraph(relationMatrix, relationMethods[distanceMethod].bestScore)
     print "... NN calculation complete"
     # OUTPUT
-    exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroup, genes)
+    exportToCSV(subdirectory,"NN", distanceMethod, nnEdges, nnPointGroupMapping, genes)
     done_with_nn_time = time.time()
     print done_with_nn_time, " (end NN time)"
     print done_with_nn_time - done_with_distance_time, " seconds (runtime for NN)"
 
-    ## Relative Neighbor
+    ## Relative Neighbor Multi Processor
     allEdges = itertools.combinations(range(len(data)), 2)
-    print "Calculating RN ..."
-    rnPointGroup, rnEdges = pg.getRelativeNeighborGraph(allEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
-    print "... RN calculation complete"
+    print "Calculating RN_MP ..."
+    rnPointGroupMapping, rnEdges = pg.getRelativeNeighborGraphMP(allEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+    print "... RN_MP calculation complete"
     # OUTPUT
-    exportToCSV(subdirectory, "RN", distanceMethod, rnEdges, rnPointGroup, genes)
+    exportToCSV(subdirectory, "RN_MP", distanceMethod, rnEdges, rnPointGroupMapping, genes)
     done_with_rn_time = time.time()
     print done_with_rn_time, " (end RN time)"
     print done_with_rn_time - done_with_nn_time, " seconds (runtime for RN)"
 
-    ## Relative Neighbor Multi Processor
-    allEdges = itertools.combinations(range(len(data)), 2)
-    print "Calculating RN_MP ..."
-    rnmpPointGroup, rnmpEdges = pg.getRelativeNeighborGraphMP(allEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
-    print "... RN_MP calculation complete"
-    # OUTPUT
-    exportToCSV(subdirectory, "RN_MP", distanceMethod, rnmpEdges, rnmpPointGroup, genes)
-    done_with_rnmp_time = time.time()
-    print done_with_rnmp_time, " (end RN_MP time)"
-    print done_with_rnmp_time - done_with_rn_time, " seconds (runtime for RN_MP)"
-    print "In RN_MP but not RN: ", len(rnmpEdges.difference(rnEdges))
-    print "In RN but not RN_MP: ", len(rnEdges.difference(rnmpEdges))
-
     # Relative Neighbor
     print "Calculating GG ..."
-    ggPointGroup, ggEdges = pg.getGabrielNeighborGraph(rnEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
+    ggPointGroupMapping, ggEdges = pg.getGabrielNeighborGraph(rnEdges, relationMatrix, relationMethods[distanceMethod].bestScore, relationMethods[distanceMethod].worstScore)
     print "... GG calculation complete"
     # OUTPUT
-    exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroup, genes)
+    exportToCSV(subdirectory, "GG", distanceMethod, ggEdges, ggPointGroupMapping, genes)
     end_time = time.time()
     print end_time, " (end time)"
     print end_time - done_with_rn_time, " seconds (runtime for GG)"
