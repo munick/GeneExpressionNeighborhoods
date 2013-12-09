@@ -94,6 +94,10 @@ if __name__ == "__main__":
         distanceMethod = sys.argv[1]
         geneExpressionFileName = baseInputDir + sys.argv[2]
         geneNameFileName = baseInputDir + sys.argv[3]
+        if len(sys.argv) >= 5:
+            skipNormalization = sys.argv[4] == "skip"
+        else:
+            skipNormalization = False
     else:
         # default to Euclidean distance
         if len(sys.argv) == 1:
@@ -103,6 +107,8 @@ if __name__ == "__main__":
         # default to yeast gene expression dataset
         geneExpressionFileName = baseInputDir + "yeast/yeastEx.txt"
         geneNameFileName = baseInputDir + "yeast/yeastNames.txt"
+        # normalize by default
+        skipNormalization = False
 
     start_time = time.time()
     print start_time, " (start time)"
@@ -115,15 +121,21 @@ if __name__ == "__main__":
     genes = np.genfromtxt(geneNameFileName, dtype=("|S10"))
 
     #PREPROCESSING
-    print "Pre-Processing data ..."
-    # normalize the data using zscore
-    normalizedData = stats.zscore(data, 1)
-    # normalizedData = data
+    if skipNormalization:
+        print "Skipping Normalization/Pre-Processing"
+        normalizedData = data
+    else:
+        print "Pre-Processing data ..."
+        # normalize the data using zscore
+        normalizedData = stats.zscore(data, 1)
 
-    # replace nans with infinite values
-    whereAreNaNs = np.isnan(normalizedData)
-    normalizedData[whereAreNaNs] = np.Inf
-    print "... Pre-Processing complete"
+        # replace nans with infinite values
+        whereAreNaNs = np.isnan(normalizedData)
+        normalizedData[whereAreNaNs] = np.Inf
+
+        #multiply by 100
+        normalizedData = normalizedData * 100
+        print "... Pre-Processing complete"
 
     # np.savetxt("normalized.txt", normalizedData, '%.2f')
     print "Calculating relationship with %s method ..." % distanceMethod
